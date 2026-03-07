@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         version="6.0">
+
+    <display-name>vorn</display-name>
+
+    <context-param>
+        <param-name>db.url</param-name>
+        <param-value>jdbc:postgresql://143.93.200.243:5435/BWUEBDB?currentSchema=bwi520_633959</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>db.user</param-name>
+        <param-value>user1</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>db.password</param-name>
+        <param-value>pgusers</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>db.init.enabled</param-name>
+        <param-value>true</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>admin.email</param-name>
+        <param-value>admin@vorn.local</param-value>
+    </context-param>
+    <context-param>
+        <param-name>admin.displayName</param-name>
+        <param-value>System Admin</param-value>
+    </context-param>
+    <context-param>
+        <param-name>admin.password</param-name>
+        <param-value>Admin123!</param-value>
+    </context-param>
+
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+</web-app>
