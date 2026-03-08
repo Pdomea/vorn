@@ -170,8 +170,9 @@
                                                                             href="<%= request.getContextPath() %>/admin/training/exercises?trainingId=<%= training.getId() %>">Übungen
                                                                             zuordnen</a>
 
-                                                                        <% if ("HIDDEN".equals(training.getStatus())) {
-                                                                            %>
+                                                                        <% if
+                                                                            (!"PUBLISHED".equals(training.getStatus()))
+                                                                            { %>
                                                                             <form class="inline-form" method="post"
                                                                                 action="<%= request.getContextPath() %>/admin/training/publish">
                                                                                 <input type="hidden" name="id"
@@ -179,25 +180,33 @@
                                                                                 <button class="btn btn-primary"
                                                                                     type="submit">Aktivieren</button>
                                                                             </form>
-                                                                            <% } else { %>
-                                                                                <form class="inline-form" method="post"
-                                                                                    action="<%= request.getContextPath() %>/admin/training/hide">
-                                                                                    <input type="hidden" name="id"
-                                                                                        value="<%= training.getId() %>">
-                                                                                    <button class="btn btn-secondary"
-                                                                                        type="submit">Archivieren</button>
-                                                                                </form>
-                                                                                <% } %>
+                                                                            <% } %>
 
+                                                                                <% if
+                                                                                    (!"HIDDEN".equals(training.getStatus()))
+                                                                                    { %>
                                                                                     <form class="inline-form"
                                                                                         method="post"
-                                                                                        action="<%= request.getContextPath() %>/admin/training/delete"
-                                                                                        onsubmit="return confirm('Training wirklich dauerhaft löschen? Dieser Schritt kann nicht rückgängig gemacht werden.');">
+                                                                                        action="<%= request.getContextPath() %>/admin/training/hide">
                                                                                         <input type="hidden" name="id"
                                                                                             value="<%= training.getId() %>">
-                                                                                        <button class="btn btn-danger"
-                                                                                            type="submit">Löschen</button>
+                                                                                        <button
+                                                                                            class="btn btn-secondary"
+                                                                                            type="submit">Archivieren</button>
                                                                                     </form>
+                                                                                    <% } %>
+
+                                                                                        <form class="inline-form"
+                                                                                            method="post"
+                                                                                            action="<%= request.getContextPath() %>/admin/training/delete"
+                                                                                            onsubmit="return confirm('Training wirklich dauerhaft löschen? Dieser Schritt kann nicht rückgängig gemacht werden.');">
+                                                                                            <input type="hidden"
+                                                                                                name="id"
+                                                                                                value="<%= training.getId() %>">
+                                                                                            <button
+                                                                                                class="btn btn-danger"
+                                                                                                type="submit">Löschen</button>
+                                                                                        </form>
                                                                     </td>
                                                                 </tr>
                                                                 <% } %>
