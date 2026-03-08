@@ -21,11 +21,13 @@ public class ExerciseService {
         this.exerciseDao = exerciseDao;
     }
 
-    public List<Exercise> getAllExercisesForAdmin(User actor, String sortByRaw, String sortDirectionRaw) throws SQLException {
+    public List<Exercise> getAllExercisesForAdmin(User actor, String sortByRaw, String sortDirectionRaw)
+            throws SQLException {
         return getAllExercisesForAdmin(actor, sortByRaw, sortDirectionRaw, null);
     }
 
-    public List<Exercise> getAllExercisesForAdmin(User actor, String sortByRaw, String sortDirectionRaw, String statusFilterRaw)
+    public List<Exercise> getAllExercisesForAdmin(User actor, String sortByRaw, String sortDirectionRaw,
+            String statusFilterRaw)
             throws SQLException {
         requireAdmin(actor);
         String sortBy = normalizeSortBy(sortByRaw);
@@ -40,7 +42,8 @@ public class ExerciseService {
         return exerciseDao.findExerciseById(exerciseId);
     }
 
-    public Exercise saveExerciseAsAdmin(User actor, String exerciseIdRaw, String name, String description, String[] muscleGroupIdsRaw)
+    public Exercise saveExerciseAsAdmin(User actor, String exerciseIdRaw, String name, String description,
+            String[] muscleGroupIdsRaw)
             throws SQLException {
         requireAdmin(actor);
         String cleanName = normalizeName(name);
@@ -71,6 +74,15 @@ public class ExerciseService {
         requireAdmin(actor);
         long exerciseId = parseExerciseId(exerciseIdRaw);
         boolean updated = exerciseDao.updateStatus(exerciseId, "ARCHIVED");
+        if (!updated) {
+            throw new IllegalArgumentException("Übung nicht gefunden.");
+        }
+    }
+
+    public void activateExerciseAsAdmin(User actor, String exerciseIdRaw) throws SQLException {
+        requireAdmin(actor);
+        long exerciseId = parseExerciseId(exerciseIdRaw);
+        boolean updated = exerciseDao.updateStatus(exerciseId, "ACTIVE");
         if (!updated) {
             throw new IllegalArgumentException("Übung nicht gefunden.");
         }

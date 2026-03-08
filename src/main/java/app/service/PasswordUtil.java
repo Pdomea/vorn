@@ -1,17 +1,11 @@
 package app.service;
 
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-
 public final class PasswordUtil {
-    private static final String ALGORITHM = "PBKDF2WithHmacSHA256";
-    private static final int ITERATIONS = 65536;
-    private static final int KEY_LENGTH = 256;
     private static final int SALT_LENGTH = 16;
 
     private PasswordUtil() {
@@ -24,10 +18,11 @@ public final class PasswordUtil {
 
         byte[] salt = new byte[SALT_LENGTH];
         new SecureRandom().nextBytes(salt);
-        byte[] hash = pbkdf2(plainPassword.toCharArray(), salt, ITERATIONS, KEY_LENGTH);
+
+        byte[] hash = sha256(salt, plainPassword);
 
         Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
-        return "pbkdf2$" + ITERATIONS + "$" + encoder.encodeToString(salt) + "$" + encoder.encodeToString(hash);
+        return "sha256$" + encoder.encodeToString(salt) + "$" + encoder.encodeToString(hash);
     }
 
     public static boolean verifyPassword(String plainPassword, String storedHash) {
@@ -36,38 +31,33 @@ public final class PasswordUtil {
         }
 
         String[] parts = storedHash.split("\\$");
-        if (parts.length != 4 || !"pbkdf2".equals(parts[0])) {
+        if (parts.length != 3 || !"sha256".equals(parts[0])) {
             return false;
         }
 
         try {
-            int iterations = Integer.parseInt(parts[1]);
             Base64.Decoder decoder = Base64.getUrlDecoder();
-            byte[] salt = decoder.decode(parts[2]);
-            byte[] expectedHash = decoder.decode(parts[3]);
-            byte[] actualHash = pbkdf2(plainPassword.toCharArray(), salt, iterations, expectedHash.length * 8);
+            byte[] salt = decoder.decode(parts[1]);
+            byte[] expectedHash = decoder.decode(parts[2]);
 
-            if (actualHash.length != expectedHash.length) {
-                return false;
-            }
+            byte[] actualHash = sha256(salt, plainPassword);
 
-            int diff = 0;
-            for (int i = 0; i < expectedHash.length; i++) {
-                diff |= expectedHash[i] ^ actualHash[i];
-            }
-            return diff == 0;
+            String expectedString = Base64.getUrlEncoder().withoutPadding().encodeToString(expectedHash);
+            String actualString = Base64.getUrlEncoder().withoutPadding().encodeToString(actualHash);
+
+            return expectedString.equals(actualString);
         } catch (RuntimeException ex) {
             return false;
         }
     }
 
-    private static byte[] pbkdf2(char[] password, byte[] salt, int iterations, int keyLength) {
+    private static byte[] sha256(byte[] salt, String password) {
         try {
-            PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, keyLength);
-            SecretKeyFactory factory = SecretKeyFactory.getInstance(ALGORITHM);
-            return factory.generateSecret(spec).getEncoded();
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException ex) {
-            throw new IllegalStateException("Password hashing failed.", ex);
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(salt);
+            return digest.digest(password.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 not available.", ex);
         }
     }
 }

@@ -37,7 +37,7 @@ public class RegisterServlet extends HttpServlet {
         RegisterBean registerBean = createBean(displayName, email);
 
         if (password == null || !password.equals(passwordConfirm)) {
-            registerBean.setError("Passwort und Passwort-Wiederholung stimmen nicht ueberein.");
+            registerBean.setError("Passwort und Passwort-Wiederholung stimmen nicht überein.");
             forwardWithBean(req, resp, registerBean);
             return;
         }
@@ -45,7 +45,8 @@ public class RegisterServlet extends HttpServlet {
         try {
             User user = authService.register(email, displayName, password);
             req.getSession(true).setAttribute("currentUser", user);
-            req.getSession(true).setAttribute("flash.info", "Registrierung erfolgreich. Bitte zuerst einen Plan wählen.");
+            req.getSession(true).setAttribute("flash.info",
+                    "Registrierung erfolgreich. Bitte zuerst einen Plan wählen.");
             resp.sendRedirect(req.getContextPath() + "/program/select");
         } catch (IllegalArgumentException ex) {
             registerBean.setError(ex.getMessage());

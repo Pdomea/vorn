@@ -23,6 +23,7 @@ import jakarta.servlet.http.HttpSession;
         "/admin/exercises",
         "/admin/exercise/save",
         "/admin/exercise/archive",
+        "/admin/exercise/activate",
         "/admin/exercise/delete"
 })
 public class AdminExerciseServlet extends HttpServlet {
@@ -48,7 +49,8 @@ public class AdminExerciseServlet extends HttpServlet {
             String sortDir = exerciseService.normalizeSortDirection(req.getParameter("sortDir"));
             String statusFilter = exerciseService.normalizeStatusFilter(req.getParameter("status"));
 
-            List<Exercise> exercises = exerciseService.getAllExercisesForAdmin(currentUser, sortBy, sortDir, statusFilter);
+            List<Exercise> exercises = exerciseService.getAllExercisesForAdmin(currentUser, sortBy, sortDir,
+                    statusFilter);
             List<MuscleGroup> muscleGroups = exerciseService.getAllMuscleGroupsForAdmin(currentUser);
 
             adminExercisesBean.setExercises(exercises);
@@ -91,6 +93,7 @@ public class AdminExerciseServlet extends HttpServlet {
             switch (servletPath) {
                 case "/admin/exercise/save" -> handleSave(req, currentUser);
                 case "/admin/exercise/archive" -> handleArchive(req, currentUser);
+                case "/admin/exercise/activate" -> handleActivate(req, currentUser);
                 case "/admin/exercise/delete" -> handleDelete(req, currentUser);
                 default -> {
                     resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
@@ -126,6 +129,12 @@ public class AdminExerciseServlet extends HttpServlet {
         String id = req.getParameter("id");
         exerciseService.archiveExerciseAsAdmin(currentUser, id);
         setFlashInfo(req, "Übung wurde archiviert.");
+    }
+
+    private void handleActivate(HttpServletRequest req, User currentUser) throws SQLException {
+        String id = req.getParameter("id");
+        exerciseService.activateExerciseAsAdmin(currentUser, id);
+        setFlashInfo(req, "Übung wurde aktiviert.");
     }
 
     private void handleDelete(HttpServletRequest req, User currentUser) throws SQLException {
