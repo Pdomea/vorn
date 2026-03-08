@@ -11,8 +11,8 @@ public class AdminExercisesBean {
     private String info;
     private String error;
 
-    private List<Exercise> exercises = List.of();
-    private List<MuscleGroup> muscleGroups = List.of();
+    private List<Exercise> exercises = new java.util.ArrayList<>();
+    private List<MuscleGroup> muscleGroups = new java.util.ArrayList<>();
 
     private Exercise editExercise;
     private Set<Long> selectedMuscleGroupIds = new LinkedHashSet<>();
@@ -46,7 +46,7 @@ public class AdminExercisesBean {
     }
 
     public void setExercises(List<Exercise> exercises) {
-        this.exercises = exercises == null ? List.of() : exercises;
+        this.exercises = exercises == null ? new java.util.ArrayList<>() : exercises;
     }
 
     public boolean hasExercises() {
@@ -58,7 +58,7 @@ public class AdminExercisesBean {
     }
 
     public void setMuscleGroups(List<MuscleGroup> muscleGroups) {
-        this.muscleGroups = muscleGroups == null ? List.of() : muscleGroups;
+        this.muscleGroups = muscleGroups == null ? new java.util.ArrayList<>() : muscleGroups;
     }
 
     public boolean hasMuscleGroups() {

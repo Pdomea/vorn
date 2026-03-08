@@ -13,7 +13,7 @@ import app.dao.WorkoutLogDao;
 import app.dao.WorkoutSessionDao;
 import app.model.User;
 import app.service.TrackingService;
-import app.service.TrackingService.PendingLogInput;
+import app.service.TrackingService.TempLogInput;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -27,7 +27,8 @@ public class SessionFinishServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        trackingService = new TrackingService(new TrainingDao(), new WorkoutSessionDao(), new SessionExerciseDao(), new WorkoutLogDao());
+        trackingService = new TrackingService(new TrainingDao(), new WorkoutSessionDao(), new SessionExerciseDao(),
+                new WorkoutLogDao());
     }
 
     @Override
@@ -36,8 +37,8 @@ public class SessionFinishServlet extends HttpServlet {
         String sessionId = req.getParameter("sessionId");
 
         try {
-            List<PendingLogInput> pendingInputs = extractPendingInputs(req);
-            trackingService.finishAndSaveSession(currentUser, sessionId, pendingInputs);
+            List<TempLogInput> tempInputs = extractTempInputs(req);
+            trackingService.finishAndSaveSession(currentUser, sessionId, tempInputs);
             setFlashInfo(req, "Training wurde beendet und gespeichert.");
             resp.sendRedirect(req.getContextPath() + "/home");
         } catch (SecurityException ex) {
@@ -51,13 +52,13 @@ public class SessionFinishServlet extends HttpServlet {
         }
     }
 
-    private List<PendingLogInput> extractPendingInputs(HttpServletRequest req) {
+    private List<TempLogInput> extractTempInputs(HttpServletRequest req) {
         String[] rowKeys = req.getParameterValues("rowKey");
         if (rowKeys == null || rowKeys.length == 0) {
-            return List.of();
+            return new java.util.ArrayList<>();
         }
 
-        List<PendingLogInput> inputs = new ArrayList<>();
+        List<TempLogInput> inputs = new ArrayList<>();
         for (String rowKey : rowKeys) {
             if (rowKey == null || rowKey.isBlank()) {
                 continue;
@@ -84,7 +85,7 @@ public class SessionFinishServlet extends HttpServlet {
                 throw new IllegalArgumentException("Ungültige Satzdaten.");
             }
 
-            inputs.add(new PendingLogInput(sessionExerciseId, setNo, reps, weight, note));
+            inputs.add(new TempLogInput(sessionExerciseId, setNo, reps, weight, note));
         }
         return inputs;
     }

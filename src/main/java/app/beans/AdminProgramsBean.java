@@ -9,7 +9,7 @@ public class AdminProgramsBean {
     private String error;
     private String statusFilter = "ALL";
     private String statusQuerySuffix = "";
-    private List<Plan> plans = List.of();
+    private List<Plan> plans = new java.util.ArrayList<>();
 
     public AdminProgramsBean() {
     }
@@ -56,7 +56,7 @@ public class AdminProgramsBean {
     }
 
     public void setPlans(List<Plan> plans) {
-        this.plans = plans == null ? List.of() : plans;
+        this.plans = plans == null ? new java.util.ArrayList<>() : plans;
     }
 
     public boolean hasPlans() {

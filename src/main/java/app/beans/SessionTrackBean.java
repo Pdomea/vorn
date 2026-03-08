@@ -15,10 +15,10 @@ public class SessionTrackBean {
     private String error;
 
     private WorkoutSession sessionData;
-    private List<SessionExercise> items = List.of();
-    private Map<Long, List<WorkoutLog>> logsByExercise = Map.of();
-    private Map<Long, BigDecimal> lastScoreByExerciseId = Map.of();
-    private Map<Long, List<Exercise>> swapCandidatesBySessionExerciseId = Map.of();
+    private List<SessionExercise> items = new java.util.ArrayList<>();
+    private Map<Long, List<WorkoutLog>> logsByExercise = new java.util.HashMap<>();
+    private Map<Long, BigDecimal> lastScoreByExerciseId = new java.util.HashMap<>();
+    private Map<Long, List<Exercise>> alternativenMap = new java.util.HashMap<>();
 
     private boolean activeSession;
     private Long startedAtEpochMillis;
@@ -56,7 +56,7 @@ public class SessionTrackBean {
     }
 
     public void setItems(List<SessionExercise> items) {
-        this.items = items == null ? List.of() : items;
+        this.items = items == null ? new java.util.ArrayList<>() : items;
     }
 
     public Map<Long, List<WorkoutLog>> getLogsByExercise() {
@@ -64,7 +64,7 @@ public class SessionTrackBean {
     }
 
     public void setLogsByExercise(Map<Long, List<WorkoutLog>> logsByExercise) {
-        this.logsByExercise = logsByExercise == null ? Map.of() : logsByExercise;
+        this.logsByExercise = logsByExercise == null ? new java.util.HashMap<>() : logsByExercise;
     }
 
     public Map<Long, BigDecimal> getLastScoreByExerciseId() {
@@ -72,16 +72,15 @@ public class SessionTrackBean {
     }
 
     public void setLastScoreByExerciseId(Map<Long, BigDecimal> lastScoreByExerciseId) {
-        this.lastScoreByExerciseId = lastScoreByExerciseId == null ? Map.of() : lastScoreByExerciseId;
+        this.lastScoreByExerciseId = lastScoreByExerciseId == null ? new java.util.HashMap<>() : lastScoreByExerciseId;
     }
 
-    public Map<Long, List<Exercise>> getSwapCandidatesBySessionExerciseId() {
-        return swapCandidatesBySessionExerciseId;
+    public Map<Long, List<Exercise>> getAlternativenMap() {
+        return alternativenMap;
     }
 
-    public void setSwapCandidatesBySessionExerciseId(Map<Long, List<Exercise>> swapCandidatesBySessionExerciseId) {
-        this.swapCandidatesBySessionExerciseId =
-                swapCandidatesBySessionExerciseId == null ? Map.of() : swapCandidatesBySessionExerciseId;
+    public void setAlternativenMap(Map<Long, List<Exercise>> alternativenMap) {
+        this.alternativenMap = alternativenMap == null ? new java.util.HashMap<>() : alternativenMap;
     }
 
     public boolean isActiveSession() {

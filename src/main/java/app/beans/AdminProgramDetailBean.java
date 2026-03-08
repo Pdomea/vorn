@@ -12,8 +12,8 @@ import app.service.ProgramService.PlanDetailData;
 public class AdminProgramDetailBean {
     private String info;
     private String error;
-    private List<Plan> plans = List.of();
-    private List<Training> trainings = List.of();
+    private List<Plan> plans = new java.util.ArrayList<>();
+    private List<Training> trainings = new java.util.ArrayList<>();
     private PlanDetailData selectedPlanDetail;
 
     public AdminProgramDetailBean() {
@@ -40,7 +40,7 @@ public class AdminProgramDetailBean {
     }
 
     public void setPlans(List<Plan> plans) {
-        this.plans = plans == null ? List.of() : plans;
+        this.plans = plans == null ? new java.util.ArrayList<>() : plans;
     }
 
     public List<Training> getTrainings() {
@@ -48,7 +48,7 @@ public class AdminProgramDetailBean {
     }
 
     public void setTrainings(List<Training> trainings) {
-        this.trainings = trainings == null ? List.of() : trainings;
+        this.trainings = trainings == null ? new java.util.ArrayList<>() : trainings;
     }
 
     public PlanDetailData getSelectedPlanDetail() {
@@ -65,14 +65,14 @@ public class AdminProgramDetailBean {
 
     public List<PlanWeek> getSelectedWeeks() {
         if (selectedPlanDetail == null || selectedPlanDetail.getWeeks() == null) {
-            return List.of();
+            return new java.util.ArrayList<>();
         }
         return selectedPlanDetail.getWeeks();
     }
 
     public Map<Long, List<PlanWeekTraining>> getWeekTrainings() {
         if (selectedPlanDetail == null || selectedPlanDetail.getWeekTrainings() == null) {
-            return Map.of();
+            return new java.util.HashMap<>();
         }
         return selectedPlanDetail.getWeekTrainings();
     }

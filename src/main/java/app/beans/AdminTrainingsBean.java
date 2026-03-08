@@ -8,7 +8,7 @@ public class AdminTrainingsBean {
     private String info;
     private String error;
 
-    private List<Training> trainings = List.of();
+    private List<Training> trainings = new java.util.ArrayList<>();
     private Training editTraining;
 
     private String sortBy = "id";
@@ -42,7 +42,7 @@ public class AdminTrainingsBean {
     }
 
     public void setTrainings(List<Training> trainings) {
-        this.trainings = trainings == null ? List.of() : trainings;
+        this.trainings = trainings == null ? new java.util.ArrayList<>() : trainings;
     }
 
     public boolean hasTrainings() {

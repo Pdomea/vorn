@@ -30,39 +30,56 @@ public class PlanDetailsServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        programService = new ProgramService(new PlanDao(), new PlanWeekDao(), new PlanWeekTrainingDao(), new TrainingDao());
+        programService = new ProgramService(new PlanDao(), new PlanWeekDao(), new PlanWeekTrainingDao(),
+                new TrainingDao());
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         User currentUser = getCurrentUser(req);
         PlanDetailsBean planDetailsBean = new PlanDetailsBean();
-        if (currentUser != null && currentUser.getActivePlanId() == null) {
+        String selectedPlanId = req.getParameter("planId");
+
+        // allow preview if user is not active in this plan but explicitly requests it
+        if (currentUser != null && currentUser.getActivePlanId() == null
+                && (selectedPlanId == null || selectedPlanId.isBlank())) {
             req.getSession(true).setAttribute("flash.info", "Bitte zuerst einen Plan auswählen.");
             resp.sendRedirect(req.getContextPath() + "/program/select");
             return;
         }
 
         try {
-            String selectedPlanId = req.getParameter("planId");
             UserProgramPageData pageData = programService.loadUserProgramPage(currentUser, selectedPlanId);
+
+            Long activeId = (currentUser != null) ? currentUser.getActivePlanId() : null;
+            boolean isPreview = (activeId == null)
+                    || (pageData.getSelectedPlan() != null && pageData.getSelectedPlan().getId() != activeId);
+            planDetailsBean.setPreviewMode(isPreview);
+
             applyPageData(planDetailsBean, pageData, req.getParameter("weekNo"), req.getContextPath());
             moveFlashMessages(req, planDetailsBean);
             forwardWithBean(req, resp, planDetailsBean);
         } catch (SecurityException ex) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, ex.getMessage());
         } catch (IllegalArgumentException ex) {
+            // fallback einbauen, damit der user keinen hässlichen 500 error beim neuladen
+            // sieht
             try {
                 UserProgramPageData fallbackPageData = programService.loadUserProgramPage(currentUser, null);
                 applyPageData(planDetailsBean, fallbackPageData, req.getParameter("weekNo"), req.getContextPath());
-            } catch (SQLException fallbackEx) {
-                throw new ServletException("Plan-Details konnten nicht geladen werden.", fallbackEx);
+            } catch (Exception fallbackEx) {
+                // if fallback also fails, use emergency error reporting
+                resp.setContentType("text/plain;charset=UTF-8");
+                fallbackEx.printStackTrace(resp.getWriter());
+                return;
             }
             planDetailsBean.setError(ex.getMessage());
             moveFlashMessages(req, planDetailsBean);
             forwardWithBean(req, resp, planDetailsBean);
-        } catch (SQLException ex) {
-            throw new ServletException("Plan-Details konnten nicht geladen werden.", ex);
+        } catch (Exception ex) {
+            // Emergency error reporting for any other exception
+            resp.setContentType("text/plain;charset=UTF-8");
+            ex.printStackTrace(resp.getWriter());
         }
     }
 
@@ -87,16 +104,18 @@ public class PlanDetailsServlet extends HttpServlet {
         PlanWeek selectedWeek = resolveSelectedWeek(pageData.getSelectedPlanWeeks(), requestedWeekNo);
         planDetailsBean.setSelectedDetailWeek(selectedWeek);
         if (selectedWeek == null) {
-            planDetailsBean.setSelectedDetailWeekTrainings(List.of());
-            planDetailsBean.setSelectedDetailWeekStatuses(Map.of());
+            planDetailsBean.setSelectedDetailWeekTrainings(new java.util.ArrayList<>());
+            planDetailsBean.setSelectedDetailWeekStatuses(new java.util.HashMap<>());
             planDetailsBean.setSelectedDetailWeekProgress(null);
             return;
         }
 
         planDetailsBean.setSelectedDetailWeekTrainings(
-                pageData.getSelectedPlanWeekTrainings().getOrDefault(selectedWeek.getId(), List.of()));
+                pageData.getWochenTrainings().getOrDefault(selectedWeek.getId(),
+                        new java.util.ArrayList<>()));
         planDetailsBean.setSelectedDetailWeekStatuses(
-                pageData.getSelectedPlanWeekTrainingStatus().getOrDefault(selectedWeek.getId(), Map.of()));
+                pageData.getWeekStatusMap().getOrDefault(selectedWeek.getId(),
+                        new java.util.HashMap<>()));
         planDetailsBean.setSelectedDetailWeekProgress(pageData.getSelectedPlanWeekProgress().get(selectedWeek.getId()));
     }
 

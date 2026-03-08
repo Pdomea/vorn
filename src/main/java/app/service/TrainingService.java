@@ -41,7 +41,8 @@ public class TrainingService {
         return getAllTrainingsForAdmin(actor, "id", "asc", statusFilterRaw);
     }
 
-    public List<Training> getAllTrainingsForAdmin(User actor, String sortByRaw, String sortDirectionRaw, String statusFilterRaw)
+    public List<Training> getAllTrainingsForAdmin(User actor, String sortByRaw, String sortDirectionRaw,
+            String statusFilterRaw)
             throws SQLException {
         requireAdmin(actor);
         String sortBy = normalizeSortBy(sortByRaw);
@@ -56,7 +57,8 @@ public class TrainingService {
         return trainingDao.findTrainingById(trainingId);
     }
 
-    public Training saveTrainingAsAdmin(User actor, String trainingIdRaw, String title, String description) throws SQLException {
+    public Training saveTrainingAsAdmin(User actor, String trainingIdRaw, String title, String description)
+            throws SQLException {
         requireAdmin(actor);
         String cleanTitle = normalizeTitle(title);
         String cleanDescription = normalizeDescription(description);
@@ -191,7 +193,7 @@ public class TrainingService {
         }
 
         public static TrainingDetailResult notFound() {
-            return new TrainingDetailResult(null, List.of());
+            return new TrainingDetailResult(null, new java.util.ArrayList<>());
         }
 
         public boolean isFound() {

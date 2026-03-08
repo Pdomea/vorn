@@ -27,8 +27,8 @@
                                             sessionTrackBean.getLogsByExercise();
                                             Map<Long, BigDecimal> lastScoreByExerciseId =
                                                 sessionTrackBean.getLastScoreByExerciseId();
-                                                Map<Long, List<Exercise>> swapCandidatesBySessionExerciseId =
-                                                    sessionTrackBean.getSwapCandidatesBySessionExerciseId();
+                                                Map<Long, List<Exercise>> alternativenMap =
+                                                    sessionTrackBean.getAlternativenMap();
                                                     boolean activeSession = sessionTrackBean.isActiveSession();
                                                     Long startedAtEpochMillis =
                                                     sessionTrackBean.getStartedAtEpochMillis();
@@ -166,11 +166,11 @@
                                                                                                             <Exercise>
                                                                                                                 swapCandidates
                                                                                                                 =
-                                                                                                                swapCandidatesBySessionExerciseId
+                                                                                                                alternativenMap
                                                                                                                 == null
                                                                                                                 ? null
                                                                                                                 :
-                                                                                                                swapCandidatesBySessionExerciseId.get(item.getId());
+                                                                                                                alternativenMap.get(item.getId());
                                                                                                                 %>
                                                                                                                 <div class="card track-exercise-card"
                                                                                                                     id="exercise-<%= item.getId() %>">

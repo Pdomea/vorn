@@ -14,7 +14,8 @@ import java.util.Map;
 import app.model.WorkoutLog;
 
 public class WorkoutLogDao {
-    public WorkoutLog upsertLog(long sessionId, long sessionExerciseId, int setNo, int reps, BigDecimal weight, String note)
+    public WorkoutLog upsertLog(long sessionId, long sessionExerciseId, int setNo, int reps, BigDecimal weight,
+            String note)
             throws SQLException {
         String sql = """
                 INSERT INTO workout_logs (
@@ -65,7 +66,8 @@ public class WorkoutLogDao {
         }
     }
 
-    public WorkoutLog insertLog(Connection connection, long sessionId, long sessionExerciseId, int setNo, int reps, BigDecimal weight,
+    public WorkoutLog insertLog(Connection connection, long sessionId, long sessionExerciseId, int setNo, int reps,
+            BigDecimal weight,
             String note) throws SQLException {
         String sql = """
                 INSERT INTO workout_logs (
@@ -166,7 +168,7 @@ public class WorkoutLogDao {
 
     public Map<Long, SessionLogSummary> findSessionSummariesBySessionIds(List<Long> sessionIds) throws SQLException {
         if (sessionIds == null || sessionIds.isEmpty()) {
-            return Map.of();
+            return new java.util.HashMap<>();
         }
 
         StringBuilder sql = new StringBuilder("""

@@ -44,6 +44,14 @@
             <div class="error-home">
                 <a class="btn btn-secondary" href="<%= request.getContextPath() %>/home">Zurück zur Startseite</a>
             </div>
+            <div
+                style="text-align: left; margin-top: 2rem; background: #fee; padding: 1rem; border: 1px solid red; overflow: auto; max-height: 400px;">
+                <h3>Debug Info:</h3>
+                <pre><%= exception != null ? exception.getClass().getName() + ": " + exception.getMessage() : "No exception object" %></pre>
+                <% if (exception !=null) { %>
+                    <pre><% exception.printStackTrace(new java.io.PrintWriter(out)); %></pre>
+                    <% } %>
+            </div>
         </div>
     </body>
 

@@ -12,9 +12,9 @@ public class AdminTrainingExercisesBean {
     private String error;
 
     private Training training;
-    private List<TrainingExercise> mappings = List.of();
-    private List<Exercise> activeExercises = List.of();
-    private List<MuscleGroup> muscleGroups = List.of();
+    private List<TrainingExercise> mappings = new java.util.ArrayList<>();
+    private List<Exercise> activeExercises = new java.util.ArrayList<>();
+    private List<MuscleGroup> muscleGroups = new java.util.ArrayList<>();
 
     private String search = "";
     private Long selectedMuscleGroupId;
@@ -52,7 +52,7 @@ public class AdminTrainingExercisesBean {
     }
 
     public void setMappings(List<TrainingExercise> mappings) {
-        this.mappings = mappings == null ? List.of() : mappings;
+        this.mappings = mappings == null ? new java.util.ArrayList<>() : mappings;
     }
 
     public boolean hasMappings() {
@@ -64,7 +64,7 @@ public class AdminTrainingExercisesBean {
     }
 
     public void setActiveExercises(List<Exercise> activeExercises) {
-        this.activeExercises = activeExercises == null ? List.of() : activeExercises;
+        this.activeExercises = activeExercises == null ? new java.util.ArrayList<>() : activeExercises;
     }
 
     public boolean hasActiveExercises() {
@@ -76,7 +76,7 @@ public class AdminTrainingExercisesBean {
     }
 
     public void setMuscleGroups(List<MuscleGroup> muscleGroups) {
-        this.muscleGroups = muscleGroups == null ? List.of() : muscleGroups;
+        this.muscleGroups = muscleGroups == null ? new java.util.ArrayList<>() : muscleGroups;
     }
 
     public String getSearch() {

@@ -14,10 +14,10 @@ public class PlanDetailsBean {
     private String error;
 
     private Plan selectedPlan;
-    private List<PlanWeek> selectedPlanWeeks = List.of();
+    private List<PlanWeek> selectedPlanWeeks = new java.util.ArrayList<>();
     private PlanWeek selectedDetailWeek;
-    private List<PlanWeekTraining> selectedDetailWeekTrainings = List.of();
-    private Map<Long, String> selectedDetailWeekStatuses = Map.of();
+    private List<PlanWeekTraining> selectedDetailWeekTrainings = new java.util.ArrayList<>();
+    private Map<Long, String> selectedDetailWeekStatuses = new java.util.HashMap<>();
     private WeekProgressData selectedDetailWeekProgress;
     private NextTrainingData selectedPlanNextTraining;
 
@@ -29,7 +29,17 @@ public class PlanDetailsBean {
     private String fallbackPlanImagePath;
     private String selectedPlanImagePath;
 
+    private boolean previewMode;
+
     public PlanDetailsBean() {
+    }
+
+    public boolean isPreviewMode() {
+        return previewMode;
+    }
+
+    public void setPreviewMode(boolean previewMode) {
+        this.previewMode = previewMode;
     }
 
     public String getInfo() {
@@ -61,7 +71,7 @@ public class PlanDetailsBean {
     }
 
     public void setSelectedPlanWeeks(List<PlanWeek> selectedPlanWeeks) {
-        this.selectedPlanWeeks = selectedPlanWeeks == null ? List.of() : selectedPlanWeeks;
+        this.selectedPlanWeeks = selectedPlanWeeks == null ? new java.util.ArrayList<>() : selectedPlanWeeks;
     }
 
     public PlanWeek getSelectedDetailWeek() {
@@ -77,7 +87,8 @@ public class PlanDetailsBean {
     }
 
     public void setSelectedDetailWeekTrainings(List<PlanWeekTraining> selectedDetailWeekTrainings) {
-        this.selectedDetailWeekTrainings = selectedDetailWeekTrainings == null ? List.of() : selectedDetailWeekTrainings;
+        this.selectedDetailWeekTrainings = selectedDetailWeekTrainings == null ? new java.util.ArrayList<>()
+                : selectedDetailWeekTrainings;
     }
 
     public Map<Long, String> getSelectedDetailWeekStatuses() {
@@ -85,7 +96,8 @@ public class PlanDetailsBean {
     }
 
     public void setSelectedDetailWeekStatuses(Map<Long, String> selectedDetailWeekStatuses) {
-        this.selectedDetailWeekStatuses = selectedDetailWeekStatuses == null ? Map.of() : selectedDetailWeekStatuses;
+        this.selectedDetailWeekStatuses = selectedDetailWeekStatuses == null ? new java.util.HashMap<>()
+                : selectedDetailWeekStatuses;
     }
 
     public WeekProgressData getSelectedDetailWeekProgress() {

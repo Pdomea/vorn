@@ -87,6 +87,7 @@ public class AdminProgramServlet extends HttpServlet {
         String redirectUrl;
 
         try {
+            // neues switch case von java genutzt (ohne break), ist uebersichtlicher
             switch (servletPath) {
                 case "/admin/program/create" -> {
                     Plan createdPlan = programService.createPlanWithDefaultWeek(

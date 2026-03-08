@@ -28,127 +28,158 @@
                                         src="<%= request.getContextPath() %>/img/brand/logo-vorn-home.svg" alt="vorn">
                                 </a>
                             </div>
-                            <a class="subtle-back-link" href="<%= request.getContextPath() %>/home">← Zurück</a>
-
-                            <div class="page-header">
-                                <div>
-                                    <h1>Plan auswählen</h1>
-                                </div>
-                                <div class="top-actions">
-                                    <a class="btn btn-ghost" href="<%= request.getContextPath() %>/home">Home</a>
-                                </div>
-                            </div>
-
-                            <% if (programSelectBean.getInfo() !=null && !programSelectBean.getInfo().isBlank()) { %>
-                                <div class="info">${programSelectBean.info}</div>
+                            <% if (currentActivePlanId !=null) { %>
+                                <a class="subtle-back-link" href="<%= request.getContextPath() %>/home">← Zurück</a>
                                 <% } %>
-                                    <% if (programSelectBean.getError() !=null &&
-                                        !programSelectBean.getError().isBlank()) { %>
-                                        <div class="error">${programSelectBean.error}</div>
+
+                                    <div class="page-header">
+                                        <div>
+                                            <h1>Plan auswählen</h1>
+                                        </div>
+                                        <% if (currentActivePlanId !=null) { %>
+                                            <div class="top-actions">
+                                                <a class="btn btn-ghost"
+                                                    href="<%= request.getContextPath() %>/home">Home</a>
+                                            </div>
+                                            <% } %>
+                                    </div>
+
+                                    <% if (programSelectBean.getInfo() !=null && !programSelectBean.getInfo().isBlank())
+                                        { %>
+                                        <div class="info">${programSelectBean.info}</div>
                                         <% } %>
+                                            <% if (programSelectBean.getError() !=null &&
+                                                !programSelectBean.getError().isBlank()) { %>
+                                                <div class="error">${programSelectBean.error}</div>
+                                                <% } %>
 
-                                            <section class="admin-console-stage">
-                                                <h2 class="admin-console-stage-title">Programme auswählen</h2>
-                                                <p class="admin-console-stage-subtitle">Wähle den Plan, den du als
-                                                    Nächstes trainierst.</p>
-                                                <p class="program-select-note">Planwechsel löscht alle Ergebnisse.</p>
+                                                    <section class="admin-console-stage">
+                                                        <h2 class="admin-console-stage-title">Programme auswählen</h2>
+                                                        <p class="admin-console-stage-subtitle">Wähle den Plan, den du
+                                                            als
+                                                            Nächstes trainierst.</p>
+                                                        <% if (currentActivePlanId !=null) { %>
+                                                            <p class="program-select-note">Planwechsel löscht alle
+                                                                Ergebnisse.</p>
+                                                            <% } %>
 
-                                                <% if (!programSelectBean.hasActivePlans()) { %>
-                                                    <div class="card admin-console-card">
-                                                        <p class="muted">Es gibt aktuell keine aktiven Programme.</p>
-                                                    </div>
-                                                    <% } else { %>
-                                                        <div class="card admin-console-card">
-                                                            <div class="program-select-carousel" data-program-carousel>
-                                                                <div class="program-select-carousel-viewport"
-                                                                    data-carousel-viewport>
-                                                                    <div class="admin-console-grid program-select-carousel-track"
-                                                                        data-carousel-track>
-                                                                        <% for (Plan plan : activePlans) { String
-                                                                            planImagePath=fallbackImage; if
-                                                                            (plan.getHeroImagePath() !=null &&
-                                                                            !plan.getHeroImagePath().isBlank()) { String
-                                                                            rawPath=plan.getHeroImagePath().trim(); if
-                                                                            (!rawPath.startsWith("/")) { rawPath="/" +
-                                                                            rawPath; }
-                                                                            planImagePath=request.getContextPath() +
-                                                                            rawPath; } boolean
-                                                                            isActive=currentActivePlanId !=null &&
-                                                                            currentActivePlanId==plan.getId(); %>
-                                                                            <article class="admin-console-tile">
-                                                                                <img class="admin-console-tile-image"
-                                                                                    src="<%= planImagePath %>"
-                                                                                    onerror="this.onerror=null;this.src='<%= fallbackImage %>';"
-                                                                                    alt="<%= plan.getName() %>">
-                                                                                <span
-                                                                                    class="admin-console-tile-overlay"></span>
-                                                                                <span
-                                                                                    class="admin-console-tile-content">
-                                                                                    <span
-                                                                                        class="admin-console-tile-title">
-                                                                                        <%= plan.getName() %>
-                                                                                    </span>
-                                                                                    <span
-                                                                                        class="admin-console-tile-text">
-                                                                                        <%= plan.getDescription()==null
-                                                                                            ||
-                                                                                            plan.getDescription().isBlank()
-                                                                                            ? "Ohne Beschreibung." :
-                                                                                            plan.getDescription() %>
-                                                                                    </span>
-                                                                                    <% if (isActive) { %>
-                                                                                        <span
-                                                                                            class="status-badge status-done">Aktiv</span>
-                                                                                        <% } %>
-                                                                                            <div
-                                                                                                style="display: flex; gap: 0.5rem; margin-top: auto; width: 100%;">
-                                                                                                <a href="<%= request.getContextPath() %>/plan/details?planId=<%= plan.getId() %>"
-                                                                                                    class="btn btn-ghost program-select-btn"
-                                                                                                    style="flex: 1; text-align: center; justify-content: center; padding: 0.5rem;">Ansehen</a>
-                                                                                                <% if (isActive) { %>
-                                                                                                    <button
-                                                                                                        class="btn btn-secondary program-select-btn"
-                                                                                                        type="button"
-                                                                                                        disabled
-                                                                                                        style="flex: 1; padding: 0.5rem;">Aktiv</button>
-                                                                                                    <% } else { %>
-                                                                                                        <form
-                                                                                                            class="inline-form program-select-card-action"
-                                                                                                            method="post"
-                                                                                                            action="<%= request.getContextPath() %>/program/select"
-                                                                                                            style="flex: 1; margin: 0; display: flex;">
-                                                                                                            <input
-                                                                                                                type="hidden"
-                                                                                                                name="planId"
-                                                                                                                value="<%= plan.getId() %>">
-                                                                                                            <button
-                                                                                                                class="btn btn-secondary program-select-btn"
-                                                                                                                type="submit"
-                                                                                                                style="width: 100%; padding: 0.5rem;">Wählen</button>
-                                                                                                        </form>
-                                                                                                        <% } %>
-                                                                                            </div>
-                                                                                </span>
-                                                                            </article>
-                                                                            <% } %>
+                                                                <% if (!programSelectBean.hasActivePlans()) { %>
+                                                                    <div class="card admin-console-card">
+                                                                        <p class="muted">Es gibt aktuell keine aktiven
+                                                                            Programme.</p>
                                                                     </div>
-                                                                </div>
-                                                                <div class="program-select-carousel-controls">
-                                                                    <button class="program-select-carousel-nav"
-                                                                        type="button" data-carousel-prev
-                                                                        aria-label="Vorherige Pläne">
-                                                                        &#8249;
-                                                                    </button>
-                                                                    <button class="program-select-carousel-nav"
-                                                                        type="button" data-carousel-next
-                                                                        aria-label="Nächste Pläne">
-                                                                        &#8250;
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <% } %>
-                                            </section>
+                                                                    <% } else { %>
+                                                                        <div class="card admin-console-card">
+                                                                            <div class="program-select-carousel"
+                                                                                data-program-carousel>
+                                                                                <div class="program-select-carousel-viewport"
+                                                                                    data-carousel-viewport>
+                                                                                    <div class="admin-console-grid program-select-carousel-track"
+                                                                                        data-carousel-track>
+                                                                                        <% for (Plan plan : activePlans)
+                                                                                            { String
+                                                                                            planImagePath=fallbackImage;
+                                                                                            if (plan.getHeroImagePath()
+                                                                                            !=null &&
+                                                                                            !plan.getHeroImagePath().isBlank())
+                                                                                            { String
+                                                                                            rawPath=plan.getHeroImagePath().trim();
+                                                                                            if
+                                                                                            (!rawPath.startsWith("/")) {
+                                                                                            rawPath="/" + rawPath; }
+                                                                                            planImagePath=request.getContextPath()
+                                                                                            + rawPath; } boolean
+                                                                                            isActive=currentActivePlanId
+                                                                                            !=null &&
+                                                                                            currentActivePlanId==plan.getId();
+                                                                                            %>
+                                                                                            <article
+                                                                                                class="admin-console-tile">
+                                                                                                <img class="admin-console-tile-image"
+                                                                                                    src="<%= planImagePath %>"
+                                                                                                    onerror="this.onerror=null;this.src='<%= fallbackImage %>';"
+                                                                                                    alt="<%= plan.getName() %>">
+                                                                                                <span
+                                                                                                    class="admin-console-tile-overlay"></span>
+                                                                                                <span
+                                                                                                    class="admin-console-tile-content">
+                                                                                                    <span
+                                                                                                        class="admin-console-tile-title">
+                                                                                                        <%= plan.getName()
+                                                                                                            %>
+                                                                                                    </span>
+                                                                                                    <span
+                                                                                                        class="admin-console-tile-text">
+                                                                                                        <%= plan.getDescription()==null
+                                                                                                            ||
+                                                                                                            plan.getDescription().isBlank()
+                                                                                                            ? "Ohne Beschreibung."
+                                                                                                            :
+                                                                                                            plan.getDescription()
+                                                                                                            %>
+                                                                                                    </span>
+                                                                                                    <% if (isActive) {
+                                                                                                        %>
+                                                                                                        <span
+                                                                                                            class="status-badge status-done">Aktiv</span>
+                                                                                                        <% } %>
+                                                                                                            <div
+                                                                                                                style="display: flex; gap: 0.5rem; margin-top: auto; width: 100%;">
+                                                                                                                <a href="<%= request.getContextPath() %>/plan/details?planId=<%= plan.getId() %>"
+                                                                                                                    class="btn btn-ghost program-select-btn"
+                                                                                                                    style="flex: 1; text-align: center; justify-content: center; padding: 0.5rem;">Ansehen</a>
+                                                                                                                <% if
+                                                                                                                    (isActive)
+                                                                                                                    { %>
+                                                                                                                    <button
+                                                                                                                        class="btn btn-secondary program-select-btn"
+                                                                                                                        type="button"
+                                                                                                                        disabled
+                                                                                                                        style="flex: 1; padding: 0.5rem;">Aktiv</button>
+                                                                                                                    <% } else
+                                                                                                                        {
+                                                                                                                        %>
+                                                                                                                        <form
+                                                                                                                            class="inline-form program-select-card-action"
+                                                                                                                            method="post"
+                                                                                                                            action="<%= request.getContextPath() %>/program/select"
+                                                                                                                            style="flex: 1; margin: 0; display: flex;">
+                                                                                                                            <input
+                                                                                                                                type="hidden"
+                                                                                                                                name="planId"
+                                                                                                                                value="<%= plan.getId() %>">
+                                                                                                                            <button
+                                                                                                                                class="btn btn-secondary program-select-btn"
+                                                                                                                                type="submit"
+                                                                                                                                style="width: 100%; padding: 0.5rem;">Wählen</button>
+                                                                                                                        </form>
+                                                                                                                        <% }
+                                                                                                                            %>
+                                                                                                            </div>
+                                                                                                </span>
+                                                                                            </article>
+                                                                                            <% } %>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div
+                                                                                    class="program-select-carousel-controls">
+                                                                                    <button
+                                                                                        class="program-select-carousel-nav"
+                                                                                        type="button" data-carousel-prev
+                                                                                        aria-label="Vorherige Pläne">
+                                                                                        &#8249;
+                                                                                    </button>
+                                                                                    <button
+                                                                                        class="program-select-carousel-nav"
+                                                                                        type="button" data-carousel-next
+                                                                                        aria-label="Nächste Pläne">
+                                                                                        &#8250;
+                                                                                    </button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <% } %>
+                                                    </section>
                         </div>
                         <script>
                             (function () {

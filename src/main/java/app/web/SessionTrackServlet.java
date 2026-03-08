@@ -26,7 +26,8 @@ public class SessionTrackServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        trackingService = new TrackingService(new TrainingDao(), new WorkoutSessionDao(), new SessionExerciseDao(), new WorkoutLogDao());
+        trackingService = new TrackingService(new TrainingDao(), new WorkoutSessionDao(), new SessionExerciseDao(),
+                new WorkoutLogDao());
     }
 
     @Override
@@ -41,7 +42,7 @@ public class SessionTrackServlet extends HttpServlet {
             sessionTrackBean.setItems(data.getSnapshotItems());
             sessionTrackBean.setLogsByExercise(data.getLogsByExercise());
             sessionTrackBean.setLastScoreByExerciseId(data.getLastScoreByExerciseId());
-            sessionTrackBean.setSwapCandidatesBySessionExerciseId(data.getSwapCandidatesBySessionExerciseId());
+            sessionTrackBean.setAlternativenMap(data.getAlternativenMap());
             moveFlashMessages(req, sessionTrackBean);
             forwardWithBean(req, resp, sessionTrackBean);
         } catch (SecurityException ex) {

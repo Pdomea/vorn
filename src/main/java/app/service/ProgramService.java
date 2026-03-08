@@ -37,16 +37,21 @@ public class ProgramService {
     private final WorkoutLogDao workoutLogDao;
     private final SessionExerciseDao sessionExerciseDao = new SessionExerciseDao();
 
-    public ProgramService(PlanDao planDao, PlanWeekDao planWeekDao, PlanWeekTrainingDao planWeekTrainingDao, TrainingDao trainingDao) {
-        this(planDao, planWeekDao, planWeekTrainingDao, trainingDao, new UserDao(), new WorkoutSessionDao(), new WorkoutLogDao());
+    public ProgramService(PlanDao planDao, PlanWeekDao planWeekDao, PlanWeekTrainingDao planWeekTrainingDao,
+            TrainingDao trainingDao) {
+        this(planDao, planWeekDao, planWeekTrainingDao, trainingDao, new UserDao(), new WorkoutSessionDao(),
+                new WorkoutLogDao());
     }
 
-    public ProgramService(PlanDao planDao, PlanWeekDao planWeekDao, PlanWeekTrainingDao planWeekTrainingDao, TrainingDao trainingDao,
+    public ProgramService(PlanDao planDao, PlanWeekDao planWeekDao, PlanWeekTrainingDao planWeekTrainingDao,
+            TrainingDao trainingDao,
             UserDao userDao) {
-        this(planDao, planWeekDao, planWeekTrainingDao, trainingDao, userDao, new WorkoutSessionDao(), new WorkoutLogDao());
+        this(planDao, planWeekDao, planWeekTrainingDao, trainingDao, userDao, new WorkoutSessionDao(),
+                new WorkoutLogDao());
     }
 
-    public ProgramService(PlanDao planDao, PlanWeekDao planWeekDao, PlanWeekTrainingDao planWeekTrainingDao, TrainingDao trainingDao,
+    public ProgramService(PlanDao planDao, PlanWeekDao planWeekDao, PlanWeekTrainingDao planWeekTrainingDao,
+            TrainingDao trainingDao,
             UserDao userDao, WorkoutSessionDao workoutSessionDao, WorkoutLogDao workoutLogDao) {
         this.planDao = planDao;
         this.planWeekDao = planWeekDao;
@@ -57,12 +62,16 @@ public class ProgramService {
         this.workoutLogDao = workoutLogDao;
     }
 
-    public Plan createPlanWithDefaultWeek(User actor, String nameRaw, String descriptionRaw, String heroImagePathRaw) throws SQLException {
+    public Plan createPlanWithDefaultWeek(User actor, String nameRaw, String descriptionRaw, String heroImagePathRaw)
+            throws SQLException {
         requireAdmin(actor);
         String name = normalizeName(nameRaw);
         String description = normalizeDescription(descriptionRaw);
         String heroImagePath = normalizeHeroImagePath(heroImagePathRaw);
 
+        // DB Transaktion manuell steuern, falls später fehler passieren
+        // dann können wir einfach rollback machen und es wird kein unsinn in der db
+        // gespeichert
         try (Connection connection = ConnectionFactory.getConnection()) {
             connection.setAutoCommit(false);
             try {
@@ -122,7 +131,8 @@ public class ProgramService {
         }
     }
 
-    public PlanWeekTraining addTrainingToWeek(User actor, String planWeekIdRaw, String trainingIdRaw, String sortOrderRaw) throws SQLException {
+    public PlanWeekTraining addTrainingToWeek(User actor, String planWeekIdRaw, String trainingIdRaw,
+            String sortOrderRaw) throws SQLException {
         requireAdmin(actor);
         long planWeekId = parsePositiveLong(planWeekIdRaw, "Plan-Woche-ID ist ungültig.");
         long trainingId = parsePositiveLong(trainingIdRaw, "Training-ID ist ungültig.");
@@ -263,7 +273,8 @@ public class ProgramService {
         }
     }
 
-    public void updatePlanAsAdmin(User actor, String planIdRaw, String nameRaw, String descriptionRaw) throws SQLException {
+    public void updatePlanAsAdmin(User actor, String planIdRaw, String nameRaw, String descriptionRaw)
+            throws SQLException {
         requireAdmin(actor);
         long planId = parsePositiveLong(planIdRaw, "Plan-ID ist ungültig.");
         Plan plan = planDao.findById(planId);
@@ -385,7 +396,8 @@ public class ProgramService {
                             sourceMapping.getTrainingId(),
                             sourceMapping.getSortOrder());
                     if (inserted == null) {
-                        throw new IllegalArgumentException("Trainings der Woche konnten nicht vollständig dupliziert werden.");
+                        throw new IllegalArgumentException(
+                                "Trainings der Woche konnten nicht vollständig dupliziert werden.");
                     }
                 }
 
@@ -405,7 +417,9 @@ public class ProgramService {
         requireAuthenticated(actor);
         List<Plan> activePlans = planDao.findActivePlans();
         if (activePlans.isEmpty()) {
-            return new UserProgramPageData(activePlans, null, List.of(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), null);
+            return new UserProgramPageData(activePlans, null, new java.util.ArrayList<>(), new java.util.HashMap<>(),
+                    new java.util.HashMap<>(), new java.util.HashMap<>(), new java.util.HashMap<>(),
+                    new java.util.HashMap<>(), null);
         }
 
         Plan selectedPlan = resolveSelectedActivePlan(actor, selectedPlanIdRaw, activePlans);
@@ -413,16 +427,18 @@ public class ProgramService {
         List<PlanWeek> weeks = planWeekDao.findByPlanId(selectedPlan.getId());
         Map<Long, List<PlanWeekTraining>> weekTrainings = new LinkedHashMap<>();
         for (PlanWeek week : weeks) {
-            weekTrainings.put(week.getId(), planWeekTrainingDao.findByWeekIdAndTrainingStatus(week.getId(), "PUBLISHED"));
+            weekTrainings.put(week.getId(),
+                    planWeekTrainingDao.findByWeekIdAndTrainingStatus(week.getId(), "PUBLISHED"));
         }
 
-        Map<Long, Map<Long, ProgramTrainingHistorySummary>> weekTrainingHistory =
-                loadLatestHistoryByWeekAndTraining(actor.getId(), selectedPlan.getId());
+        Map<Long, Map<Long, ProgramTrainingHistorySummary>> weekTrainingHistory = loadLatestHistoryByWeekAndTraining(
+                actor.getId(), selectedPlan.getId());
         WorkoutSession activeSession = workoutSessionDao.findActiveByUserId(actor.getId());
 
-        Map<Long, Map<Long, String>> weekTrainingStatus =
-                buildWeekTrainingStatus(selectedPlan, weeks, weekTrainings, weekTrainingHistory, activeSession);
-        Map<Long, WeekProgressData> weekProgressByWeekId = buildWeekProgressByWeekId(weeks, weekTrainings, weekTrainingStatus);
+        Map<Long, Map<Long, String>> weekTrainingStatus = buildWeekTrainingStatus(selectedPlan, weeks, weekTrainings,
+                weekTrainingHistory, activeSession);
+        Map<Long, WeekProgressData> weekProgressByWeekId = buildWeekProgressByWeekId(weeks, weekTrainings,
+                weekTrainingStatus);
         Map<Long, Long> nextTrainingIdByWeekId = buildNextTrainingIdByWeekId(weeks, weekTrainings, weekTrainingStatus);
         NextTrainingData nextTraining = buildNextTraining(weeks, weekTrainings, weekTrainingStatus);
 
@@ -452,7 +468,8 @@ public class ProgramService {
         }
 
         if (workoutSessionDao.existsActiveByUserId(actor.getId())) {
-            throw new IllegalArgumentException("Planwechsel nicht möglich: Bitte aktive Session zuerst beenden oder verwerfen.");
+            throw new IllegalArgumentException(
+                    "Planwechsel nicht möglich: Bitte aktive Session zuerst beenden oder verwerfen.");
         }
 
         try (Connection connection = ConnectionFactory.getConnection()) {
@@ -499,7 +516,8 @@ public class ProgramService {
             throw new IllegalArgumentException("Plan-Woche gehört nicht zu diesem Plan.");
         }
 
-        List<PlanWeekTraining> publishedMappings = planWeekTrainingDao.findByWeekIdAndTrainingStatus(planWeekId, "PUBLISHED");
+        List<PlanWeekTraining> publishedMappings = planWeekTrainingDao.findByWeekIdAndTrainingStatus(planWeekId,
+                "PUBLISHED");
         boolean trainingAssigned = false;
         for (PlanWeekTraining mapping : publishedMappings) {
             if (mapping.getTrainingId() == trainingId) {
@@ -508,7 +526,8 @@ public class ProgramService {
             }
         }
         if (!trainingAssigned) {
-            throw new IllegalArgumentException("Training ist in dieser Woche nicht veröffentlicht oder nicht zugeordnet.");
+            throw new IllegalArgumentException(
+                    "Training ist in dieser Woche nicht veröffentlicht oder nicht zugeordnet.");
         }
 
         return new ProgramTrainingSelection(planId, planWeekId, trainingId);
@@ -528,7 +547,8 @@ public class ProgramService {
 
         if (selectedPlan != null) {
             totalPlanSlots = planWeekTrainingDao.countPublishedSlotsByPlanId(selectedPlan.getId());
-            completedPlanSlots = workoutSessionDao.countDistinctFinishedPlanSlotsByUserAndPlan(actor.getId(), selectedPlan.getId());
+            completedPlanSlots = workoutSessionDao.countDistinctFinishedPlanSlotsByUserAndPlan(actor.getId(),
+                    selectedPlan.getId());
             if (totalPlanSlots > 0) {
                 double progress = (completedPlanSlots * 100.0) / totalPlanSlots;
                 progressPercent = (int) Math.round(progress);
@@ -562,7 +582,8 @@ public class ProgramService {
         }
     }
 
-    private Plan resolveSelectedActivePlan(User actor, String selectedPlanIdRaw, List<Plan> activePlans) throws SQLException {
+    private Plan resolveSelectedActivePlan(User actor, String selectedPlanIdRaw, List<Plan> activePlans)
+            throws SQLException {
         if (selectedPlanIdRaw != null && !selectedPlanIdRaw.isBlank()) {
             long selectedPlanId = parsePositiveLong(selectedPlanIdRaw, "Plan-ID ist ungültig.");
             Plan selectedByParam = findPlanInList(activePlans, selectedPlanId);
@@ -595,11 +616,12 @@ public class ProgramService {
         return null;
     }
 
-    private Map<Long, Map<Long, ProgramTrainingHistorySummary>> loadLatestHistoryByWeekAndTraining(long userId, long planId)
+    private Map<Long, Map<Long, ProgramTrainingHistorySummary>> loadLatestHistoryByWeekAndTraining(long userId,
+            long planId)
             throws SQLException {
         List<WorkoutSession> latestSessions = workoutSessionDao.findLatestFinishedByTrainingForPlan(userId, planId);
         if (latestSessions.isEmpty()) {
-            return Map.of();
+            return new java.util.HashMap<>();
         }
 
         List<Long> sessionIds = new ArrayList<>();
@@ -608,6 +630,8 @@ public class ProgramService {
         }
         Map<Long, SessionLogSummary> summariesBySessionId = workoutLogDao.findSessionSummariesBySessionIds(sessionIds);
 
+        // Map in einer Map, damit wir die Trainings pro Woche speichern können
+        // key1 = wochen id, key2 = training id
         Map<Long, Map<Long, ProgramTrainingHistorySummary>> historyByWeekAndTraining = new LinkedHashMap<>();
         for (WorkoutSession session : latestSessions) {
             if (session.getPlanWeekId() == null) {
@@ -620,6 +644,8 @@ public class ProgramService {
                     ? BigDecimal.ZERO
                     : summary.getTotalVolume();
 
+            // computeIfAbsent guckt ob es den key schon gibt, wenn nicht wird eine neue
+            // leere map angelegt
             historyByWeekAndTraining
                     .computeIfAbsent(session.getPlanWeekId(), ignored -> new LinkedHashMap<>())
                     .put(session.getTrainingId(), new ProgramTrainingHistorySummary(
@@ -640,9 +666,9 @@ public class ProgramService {
             WorkoutSession activeSession) {
         Map<Long, Map<Long, String>> statusByWeek = new LinkedHashMap<>();
         for (PlanWeek week : weeks) {
-            List<PlanWeekTraining> mappings = weekTrainings.getOrDefault(week.getId(), List.of());
-            Map<Long, ProgramTrainingHistorySummary> historyByTraining =
-                    weekTrainingHistory.getOrDefault(week.getId(), Map.of());
+            List<PlanWeekTraining> mappings = weekTrainings.getOrDefault(week.getId(), new java.util.ArrayList<>());
+            Map<Long, ProgramTrainingHistorySummary> historyByTraining = weekTrainingHistory.getOrDefault(week.getId(),
+                    new java.util.HashMap<>());
 
             Map<Long, String> statusByTraining = new LinkedHashMap<>();
             for (PlanWeekTraining mapping : mappings) {
@@ -659,7 +685,8 @@ public class ProgramService {
         return statusByWeek;
     }
 
-    private boolean isActiveSlot(Plan selectedPlan, PlanWeek week, PlanWeekTraining mapping, WorkoutSession activeSession) {
+    private boolean isActiveSlot(Plan selectedPlan, PlanWeek week, PlanWeekTraining mapping,
+            WorkoutSession activeSession) {
         if (selectedPlan == null || activeSession == null) {
             return false;
         }
@@ -680,8 +707,8 @@ public class ProgramService {
             Map<Long, Map<Long, String>> weekTrainingStatus) {
         Map<Long, WeekProgressData> progressByWeekId = new LinkedHashMap<>();
         for (PlanWeek week : weeks) {
-            List<PlanWeekTraining> mappings = weekTrainings.getOrDefault(week.getId(), List.of());
-            Map<Long, String> statuses = weekTrainingStatus.getOrDefault(week.getId(), Map.of());
+            List<PlanWeekTraining> mappings = weekTrainings.getOrDefault(week.getId(), new java.util.ArrayList<>());
+            Map<Long, String> statuses = weekTrainingStatus.getOrDefault(week.getId(), new java.util.HashMap<>());
             int totalSlots = mappings.size();
             int completedSlots = 0;
             for (PlanWeekTraining mapping : mappings) {
@@ -705,8 +732,8 @@ public class ProgramService {
             Map<Long, Map<Long, String>> weekTrainingStatus) {
         Map<Long, Long> nextByWeekId = new LinkedHashMap<>();
         for (PlanWeek week : weeks) {
-            List<PlanWeekTraining> mappings = weekTrainings.getOrDefault(week.getId(), List.of());
-            Map<Long, String> statuses = weekTrainingStatus.getOrDefault(week.getId(), Map.of());
+            List<PlanWeekTraining> mappings = weekTrainings.getOrDefault(week.getId(), new java.util.ArrayList<>());
+            Map<Long, String> statuses = weekTrainingStatus.getOrDefault(week.getId(), new java.util.HashMap<>());
             Long nextTrainingId = findNextTrainingIdForMappings(mappings, statuses);
             if (nextTrainingId != null) {
                 nextByWeekId.put(week.getId(), nextTrainingId);
@@ -720,8 +747,8 @@ public class ProgramService {
             Map<Long, List<PlanWeekTraining>> weekTrainings,
             Map<Long, Map<Long, String>> weekTrainingStatus) {
         for (PlanWeek week : weeks) {
-            List<PlanWeekTraining> mappings = weekTrainings.getOrDefault(week.getId(), List.of());
-            Map<Long, String> statuses = weekTrainingStatus.getOrDefault(week.getId(), Map.of());
+            List<PlanWeekTraining> mappings = weekTrainings.getOrDefault(week.getId(), new java.util.ArrayList<>());
+            Map<Long, String> statuses = weekTrainingStatus.getOrDefault(week.getId(), new java.util.HashMap<>());
 
             PlanWeekTraining nextInProgress = findFirstMappingByStatus(mappings, statuses, "IN_BEARBEITUNG");
             if (nextInProgress != null) {
@@ -758,7 +785,8 @@ public class ProgramService {
         return null;
     }
 
-    private PlanWeekTraining findFirstMappingByStatus(List<PlanWeekTraining> mappings, Map<Long, String> statuses, String wantedStatus) {
+    private PlanWeekTraining findFirstMappingByStatus(List<PlanWeekTraining> mappings, Map<Long, String> statuses,
+            String wantedStatus) {
         for (PlanWeekTraining mapping : mappings) {
             String status = statuses.get(mapping.getTrainingId());
             if (wantedStatus.equals(status)) {
@@ -878,28 +906,28 @@ public class ProgramService {
         private final List<Plan> activePlans;
         private final Plan selectedPlan;
         private final List<PlanWeek> selectedPlanWeeks;
-        private final Map<Long, List<PlanWeekTraining>> selectedPlanWeekTrainings;
-        private final Map<Long, Map<Long, ProgramTrainingHistorySummary>> selectedPlanWeekTrainingHistory;
-        private final Map<Long, Map<Long, String>> selectedPlanWeekTrainingStatus;
+        private final Map<Long, List<PlanWeekTraining>> wochenTrainings;
+        private final Map<Long, Map<Long, ProgramTrainingHistorySummary>> historyMap;
+        private final Map<Long, Map<Long, String>> weekStatusMap;
         private final Map<Long, WeekProgressData> selectedPlanWeekProgress;
-        private final Map<Long, Long> selectedPlanNextTrainingIdByWeek;
+        private final Map<Long, Long> nextTrainingMap;
         private final NextTrainingData selectedPlanNextTraining;
 
         public UserProgramPageData(List<Plan> activePlans, Plan selectedPlan, List<PlanWeek> selectedPlanWeeks,
-                Map<Long, List<PlanWeekTraining>> selectedPlanWeekTrainings,
-                Map<Long, Map<Long, ProgramTrainingHistorySummary>> selectedPlanWeekTrainingHistory,
-                Map<Long, Map<Long, String>> selectedPlanWeekTrainingStatus,
+                Map<Long, List<PlanWeekTraining>> wochenTrainings,
+                Map<Long, Map<Long, ProgramTrainingHistorySummary>> historyMap,
+                Map<Long, Map<Long, String>> weekStatusMap,
                 Map<Long, WeekProgressData> selectedPlanWeekProgress,
-                Map<Long, Long> selectedPlanNextTrainingIdByWeek,
+                Map<Long, Long> nextTrainingMap,
                 NextTrainingData selectedPlanNextTraining) {
             this.activePlans = activePlans;
             this.selectedPlan = selectedPlan;
             this.selectedPlanWeeks = selectedPlanWeeks;
-            this.selectedPlanWeekTrainings = selectedPlanWeekTrainings;
-            this.selectedPlanWeekTrainingHistory = selectedPlanWeekTrainingHistory;
-            this.selectedPlanWeekTrainingStatus = selectedPlanWeekTrainingStatus;
+            this.wochenTrainings = wochenTrainings;
+            this.historyMap = historyMap;
+            this.weekStatusMap = weekStatusMap;
             this.selectedPlanWeekProgress = selectedPlanWeekProgress;
-            this.selectedPlanNextTrainingIdByWeek = selectedPlanNextTrainingIdByWeek;
+            this.nextTrainingMap = nextTrainingMap;
             this.selectedPlanNextTraining = selectedPlanNextTraining;
         }
 
@@ -915,24 +943,24 @@ public class ProgramService {
             return selectedPlanWeeks;
         }
 
-        public Map<Long, List<PlanWeekTraining>> getSelectedPlanWeekTrainings() {
-            return selectedPlanWeekTrainings;
+        public Map<Long, List<PlanWeekTraining>> getWochenTrainings() {
+            return wochenTrainings;
         }
 
-        public Map<Long, Map<Long, ProgramTrainingHistorySummary>> getSelectedPlanWeekTrainingHistory() {
-            return selectedPlanWeekTrainingHistory;
+        public Map<Long, Map<Long, ProgramTrainingHistorySummary>> getHistoryMap() {
+            return historyMap;
         }
 
-        public Map<Long, Map<Long, String>> getSelectedPlanWeekTrainingStatus() {
-            return selectedPlanWeekTrainingStatus;
+        public Map<Long, Map<Long, String>> getWeekStatusMap() {
+            return weekStatusMap;
         }
 
         public Map<Long, WeekProgressData> getSelectedPlanWeekProgress() {
             return selectedPlanWeekProgress;
         }
 
-        public Map<Long, Long> getSelectedPlanNextTrainingIdByWeek() {
-            return selectedPlanNextTrainingIdByWeek;
+        public Map<Long, Long> getNextTrainingMap() {
+            return nextTrainingMap;
         }
 
         public NextTrainingData getSelectedPlanNextTraining() {
@@ -971,7 +999,8 @@ public class ProgramService {
         private final int totalReps;
         private final BigDecimal totalVolume;
 
-        public ProgramTrainingHistorySummary(long sessionId, LocalDateTime endedAt, int loggedSets, int totalReps, BigDecimal totalVolume) {
+        public ProgramTrainingHistorySummary(long sessionId, LocalDateTime endedAt, int loggedSets, int totalReps,
+                BigDecimal totalVolume) {
             this.sessionId = sessionId;
             this.endedAt = endedAt;
             this.loggedSets = loggedSets;
@@ -1010,7 +1039,8 @@ public class ProgramService {
         private final int progressPercent;
         private final boolean planCompleted;
 
-        public DashboardMetrics(BigDecimal liftedVolumeKg, int workoutsCompleted, long totalSecondsSpent, String hoursSpentText,
+        public DashboardMetrics(BigDecimal liftedVolumeKg, int workoutsCompleted, long totalSecondsSpent,
+                String hoursSpentText,
                 int completedPlanSlots, int totalPlanSlots, int progressPercent, boolean planCompleted) {
             this.liftedVolumeKg = liftedVolumeKg == null ? BigDecimal.ZERO : liftedVolumeKg;
             this.workoutsCompleted = workoutsCompleted;

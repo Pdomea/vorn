@@ -33,16 +33,19 @@ public class TrackingService {
     private final WorkoutLogDao workoutLogDao;
     private final ExerciseDao exerciseDao;
 
-    public TrackingService(TrainingDao trainingDao, WorkoutSessionDao workoutSessionDao, SessionExerciseDao sessionExerciseDao) {
+    public TrackingService(TrainingDao trainingDao, WorkoutSessionDao workoutSessionDao,
+            SessionExerciseDao sessionExerciseDao) {
         this(trainingDao, workoutSessionDao, sessionExerciseDao, new WorkoutLogDao(), new ExerciseDao());
     }
 
-    public TrackingService(TrainingDao trainingDao, WorkoutSessionDao workoutSessionDao, SessionExerciseDao sessionExerciseDao,
+    public TrackingService(TrainingDao trainingDao, WorkoutSessionDao workoutSessionDao,
+            SessionExerciseDao sessionExerciseDao,
             WorkoutLogDao workoutLogDao) {
         this(trainingDao, workoutSessionDao, sessionExerciseDao, workoutLogDao, new ExerciseDao());
     }
 
-    public TrackingService(TrainingDao trainingDao, WorkoutSessionDao workoutSessionDao, SessionExerciseDao sessionExerciseDao,
+    public TrackingService(TrainingDao trainingDao, WorkoutSessionDao workoutSessionDao,
+            SessionExerciseDao sessionExerciseDao,
             WorkoutLogDao workoutLogDao, ExerciseDao exerciseDao) {
         this.trainingDao = trainingDao;
         this.workoutSessionDao = workoutSessionDao;
@@ -57,7 +60,8 @@ public class TrackingService {
         return startOrResumeSessionInternal(actor, trainingId, null, null);
     }
 
-    public StartSessionResult startOrResumeSessionInProgram(User actor, long planId, long planWeekId, long trainingId) throws SQLException {
+    public StartSessionResult startOrResumeSessionInProgram(User actor, long planId, long planWeekId, long trainingId)
+            throws SQLException {
         requireAuthenticated(actor);
         if (planId <= 0 || planWeekId <= 0 || trainingId <= 0) {
             throw new IllegalArgumentException("Plan/Woche/Training ist ungültig.");
@@ -65,7 +69,8 @@ public class TrackingService {
         return startOrResumeSessionInternal(actor, trainingId, planId, planWeekId);
     }
 
-    private StartSessionResult startOrResumeSessionInternal(User actor, long trainingId, Long planId, Long planWeekId) throws SQLException {
+    private StartSessionResult startOrResumeSessionInternal(User actor, long trainingId, Long planId, Long planWeekId)
+            throws SQLException {
         Training training = trainingDao.findPublishedTrainingById(trainingId);
         if (training == null) {
             throw new IllegalArgumentException("Nur veröffentlichte Trainings können gestartet werden.");
@@ -76,6 +81,8 @@ public class TrackingService {
             return StartSessionResult.resumed(activeSession.getId(), activeSession.getTrainingTitle());
         }
 
+        // Transaktion manuell steuern (autoCommit = false),
+        // damit bei ausnahmen einfach ein rollback gemacht werden kann
         try (Connection connection = ConnectionFactory.getConnection()) {
             connection.setAutoCommit(false);
             try {
@@ -88,7 +95,8 @@ public class TrackingService {
                     throw new IllegalArgumentException("Du hast bereits eine aktive Session.");
                 }
 
-                WorkoutSession session = workoutSessionDao.insertActiveSession(connection, actor.getId(), trainingId, planId, planWeekId);
+                WorkoutSession session = workoutSessionDao.insertActiveSession(connection, actor.getId(), trainingId,
+                        planId, planWeekId);
                 if (session == null) {
                     throw new IllegalArgumentException("Session konnte nicht gestartet werden.");
                 }
@@ -138,14 +146,16 @@ public class TrackingService {
                 actor.getId(),
                 session.getTrainingId(),
                 session.getId());
-        Map<Long, List<Exercise>> swapCandidatesBySessionExerciseId = Map.of();
+        Map<Long, List<Exercise>> alternativenMap = new java.util.HashMap<>();
         if ("ACTIVE".equals(session.getStatus())) {
-            swapCandidatesBySessionExerciseId = buildSwapCandidates(snapshotItems);
+            alternativenMap = buildSwapCandidates(snapshotItems);
         }
-        return new TrackPageData(session, snapshotItems, logsByExercise, lastScoreByExerciseId, swapCandidatesBySessionExerciseId);
+        return new TrackPageData(session, snapshotItems, logsByExercise, lastScoreByExerciseId,
+                alternativenMap);
     }
 
-    public void saveSetLog(User actor, String sessionIdRaw, String sessionExerciseIdRaw, String setNoRaw, String repsRaw, String weightRaw,
+    public void saveSetLog(User actor, String sessionIdRaw, String sessionExerciseIdRaw, String setNoRaw,
+            String repsRaw, String weightRaw,
             String noteRaw) throws SQLException {
         requireAuthenticated(actor);
         long sessionId = parsePositiveLong(sessionIdRaw, "Session-ID ist ungültig.");
@@ -192,7 +202,8 @@ public class TrackingService {
         }
     }
 
-    public void finishAndSaveSession(User actor, String sessionIdRaw, List<PendingLogInput> pendingInputs) throws SQLException {
+    public void finishAndSaveSession(User actor, String sessionIdRaw, List<TempLogInput> tempInputs)
+            throws SQLException {
         requireAuthenticated(actor);
         long sessionId = parsePositiveLong(sessionIdRaw, "Session-ID ist ungültig.");
 
@@ -214,7 +225,7 @@ public class TrackingService {
             plannedSetsBySessionExerciseId.put(item.getId(), item.getPlannedSetsSnapshot());
         }
 
-        List<ValidatedLogInput> validatedInputs = validatePendingInputs(pendingInputs, plannedSetsBySessionExerciseId);
+        List<ValidatedLogInput> validatedInputs = validateTempInputs(tempInputs, plannedSetsBySessionExerciseId);
 
         try (Connection connection = ConnectionFactory.getConnection()) {
             connection.setAutoCommit(false);
@@ -269,7 +280,8 @@ public class TrackingService {
         }
     }
 
-    public SwapResult swapSessionExercise(User actor, String sessionIdRaw, String sessionExerciseIdRaw, String replacementExerciseIdRaw)
+    public SwapResult swapSessionExercise(User actor, String sessionIdRaw, String sessionExerciseIdRaw,
+            String replacementExerciseIdRaw)
             throws SQLException {
         requireAuthenticated(actor);
         long sessionId = parsePositiveLong(sessionIdRaw, "Session-ID ist ungültig.");
@@ -293,7 +305,8 @@ public class TrackingService {
             throw new IllegalArgumentException("Bitte eine andere Übung auswählen.");
         }
         if (workoutLogDao.existsForSessionExercise(sessionId, sessionExerciseId)) {
-            throw new IllegalArgumentException("Übung kann nicht getauscht werden, weil bereits Sets gespeichert wurden.");
+            throw new IllegalArgumentException(
+                    "Übung kann nicht getauscht werden, weil bereits Sets gespeichert wurden.");
         }
         Exercise replacementExercise = exerciseDao.findExerciseById(replacementExerciseId);
         if (replacementExercise == null || !"ACTIVE".equals(replacementExercise.getStatus())) {
@@ -356,7 +369,8 @@ public class TrackingService {
             durationSeconds = Math.max(0L, Duration.between(session.getStartedAt(), session.getEndedAt()).getSeconds());
         }
 
-        return new SessionResultData(session, snapshotItems, logsByExercise, loggedSets, totalReps, totalVolume, durationSeconds);
+        return new SessionResultData(session, snapshotItems, logsByExercise, loggedSets, totalReps, totalVolume,
+                durationSeconds);
     }
 
     public WorkoutSession findActiveSession(User actor) throws SQLException {
@@ -426,15 +440,16 @@ public class TrackingService {
         return normalized;
     }
 
-    private List<ValidatedLogInput> validatePendingInputs(List<PendingLogInput> pendingInputs, Map<Long, Integer> plannedSetsById) {
-        if (pendingInputs == null || pendingInputs.isEmpty()) {
-            return List.of();
+    private List<ValidatedLogInput> validateTempInputs(List<TempLogInput> tempInputs,
+            Map<Long, Integer> plannedSetsById) {
+        if (tempInputs == null || tempInputs.isEmpty()) {
+            return new java.util.ArrayList<>();
         }
 
         List<ValidatedLogInput> validated = new ArrayList<>();
         Set<String> uniqueKeys = new HashSet<>();
 
-        for (PendingLogInput input : pendingInputs) {
+        for (TempLogInput input : tempInputs) {
             if (input == null) {
                 continue;
             }
@@ -465,12 +480,15 @@ public class TrackingService {
         return validated;
     }
 
-    private Map<Long, List<WorkoutLog>> groupLogsBySessionExercise(List<SessionExercise> snapshotItems, List<WorkoutLog> logs) {
+    private Map<Long, List<WorkoutLog>> groupLogsBySessionExercise(List<SessionExercise> snapshotItems,
+            List<WorkoutLog> logs) {
         Map<Long, List<WorkoutLog>> logsByExercise = new LinkedHashMap<>();
         for (SessionExercise item : snapshotItems) {
             logsByExercise.put(item.getId(), new ArrayList<>());
         }
         for (WorkoutLog log : logs) {
+            // computeIfAbsent erstellt direkt ne neue liste wenn es noch keine für die
+            // uebung gibt
             logsByExercise.computeIfAbsent(log.getSessionExerciseId(), ignored -> new ArrayList<>()).add(log);
         }
         return logsByExercise;
@@ -517,14 +535,14 @@ public class TrackingService {
         }
     }
 
-    public static final class PendingLogInput {
+    public static final class TempLogInput {
         private final long sessionExerciseId;
         private final int setNo;
         private final String repsRaw;
         private final String weightRaw;
         private final String noteRaw;
 
-        public PendingLogInput(long sessionExerciseId, int setNo, String repsRaw, String weightRaw, String noteRaw) {
+        public TempLogInput(long sessionExerciseId, int setNo, String repsRaw, String weightRaw, String noteRaw) {
             this.sessionExerciseId = sessionExerciseId;
             this.setNo = setNo;
             this.repsRaw = repsRaw;
@@ -561,15 +579,17 @@ public class TrackingService {
         private final List<SessionExercise> snapshotItems;
         private final Map<Long, List<WorkoutLog>> logsByExercise;
         private final Map<Long, BigDecimal> lastScoreByExerciseId;
-        private final Map<Long, List<Exercise>> swapCandidatesBySessionExerciseId;
+        private final Map<Long, List<Exercise>> alternativenMap;
 
-        public TrackPageData(WorkoutSession session, List<SessionExercise> snapshotItems, Map<Long, List<WorkoutLog>> logsByExercise,
-                Map<Long, BigDecimal> lastScoreByExerciseId, Map<Long, List<Exercise>> swapCandidatesBySessionExerciseId) {
+        public TrackPageData(WorkoutSession session, List<SessionExercise> snapshotItems,
+                Map<Long, List<WorkoutLog>> logsByExercise,
+                Map<Long, BigDecimal> lastScoreByExerciseId,
+                Map<Long, List<Exercise>> alternativenMap) {
             this.session = session;
             this.snapshotItems = snapshotItems;
             this.logsByExercise = logsByExercise;
             this.lastScoreByExerciseId = lastScoreByExerciseId;
-            this.swapCandidatesBySessionExerciseId = swapCandidatesBySessionExerciseId;
+            this.alternativenMap = alternativenMap;
         }
 
         public WorkoutSession getSession() {
@@ -588,8 +608,8 @@ public class TrackingService {
             return lastScoreByExerciseId;
         }
 
-        public Map<Long, List<Exercise>> getSwapCandidatesBySessionExerciseId() {
-            return swapCandidatesBySessionExerciseId;
+        public Map<Long, List<Exercise>> getAlternativenMap() {
+            return alternativenMap;
         }
     }
 
@@ -598,7 +618,8 @@ public class TrackingService {
         private final List<SessionExercise> snapshotItems;
         private final Map<Long, List<WorkoutLog>> logsByExercise;
 
-        public HistoryEntry(WorkoutSession session, List<SessionExercise> snapshotItems, Map<Long, List<WorkoutLog>> logsByExercise) {
+        public HistoryEntry(WorkoutSession session, List<SessionExercise> snapshotItems,
+                Map<Long, List<WorkoutLog>> logsByExercise) {
             this.session = session;
             this.snapshotItems = snapshotItems;
             this.logsByExercise = logsByExercise;
@@ -662,7 +683,8 @@ public class TrackingService {
         private final BigDecimal totalVolume;
         private final long durationSeconds;
 
-        public SessionResultData(WorkoutSession session, List<SessionExercise> snapshotItems, Map<Long, List<WorkoutLog>> logsByExercise,
+        public SessionResultData(WorkoutSession session, List<SessionExercise> snapshotItems,
+                Map<Long, List<WorkoutLog>> logsByExercise,
                 int loggedSets, int totalReps, BigDecimal totalVolume, long durationSeconds) {
             this.session = session;
             this.snapshotItems = snapshotItems;

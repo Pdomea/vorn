@@ -10,7 +10,7 @@ import app.service.ProgramService;
 public class ProgramSelectBean {
     private String info;
     private String error;
-    private List<Plan> activePlans = List.of();
+    private List<Plan> activePlans = new java.util.ArrayList<>();
     private Long currentActivePlanId;
 
     public ProgramSelectBean() {
@@ -29,7 +29,7 @@ public class ProgramSelectBean {
     }
 
     public void setActivePlans(List<Plan> activePlans) {
-        this.activePlans = activePlans == null ? List.of() : activePlans;
+        this.activePlans = activePlans == null ? new java.util.ArrayList<>() : activePlans;
     }
 
     public Long getCurrentActivePlanId() {
