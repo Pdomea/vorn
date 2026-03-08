@@ -24,7 +24,7 @@
                                     <% Plan selectedPlan=planDetailsBean.getSelectedPlan(); List<PlanWeek>
                                         selectedPlanWeeks = planDetailsBean.getSelectedPlanWeeks();
                                         PlanWeek selectedDetailWeek = planDetailsBean.getSelectedDetailWeek();
-                                        List<PlanWeekTraining> selectedDetailWeekTrainings =
+                                        List<PlanWeekTraining> wochenTrainings =
                                             planDetailsBean.getSelectedDetailWeekTrainings();
                                             Map<Long, String> selectedDetailWeekStatuses =
                                                 planDetailsBean.getSelectedDetailWeekStatuses();
@@ -247,29 +247,32 @@
                                                                                                                     :
                                                                                                                     selectedPlanWeeks)
                                                                                                                     {
+                                                                                                                    String
+                                                                                                                    weekId=String.valueOf(week.getId());
                                                                                                                     boolean
-                                                                                                                    activeWeek=selectedDetailWeek
+                                                                                                                    isActive=selectedDetailWeek
                                                                                                                     !=null
                                                                                                                     &&
                                                                                                                     selectedDetailWeek.getId()==week.getId();
+                                                                                                                    String
+                                                                                                                    cssClass=isActive
+                                                                                                                    ? "plan-details-week-link is-active"
+                                                                                                                    : "plan-details-week-link"
+                                                                                                                    ;
+                                                                                                                    String
+                                                                                                                    weekUrl=request.getContextPath()
+                                                                                                                    + "/plan/details?planId="
+                                                                                                                    +
+                                                                                                                    selectedPlan.getId()
+                                                                                                                    + "&weekNo="
+                                                                                                                    +
+                                                                                                                    week.getWeekNo();
                                                                                                                     %>
-                                                                                                                    <a class="plan-details-week-link <%= activeWeek ? "
-                                                                                                                        is-active"
-                                                                                                                        : ""
-                                                                                                                        %>"
-                                                                                                                        href="
-                                                                                                                        <%= request.getContextPath()
+                                                                                                                    <a class="<%= cssClass %>"
+                                                                                                                        href="<%= weekUrl %>">
+                                                                                                                        Woche
+                                                                                                                        <%= week.getWeekNo()
                                                                                                                             %>
-                                                                                                                            /plan/details?planId=
-                                                                                                                            <%= selectedPlan.getId()
-                                                                                                                                %>
-                                                                                                                                &weekNo=
-                                                                                                                                <%= week.getWeekNo()
-                                                                                                                                    %>
-                                                                                                                                    ">
-                                                                                                                                    Woche
-                                                                                                                                    <%= week.getWeekNo()
-                                                                                                                                        %>
                                                                                                                     </a>
                                                                                                                     <% }
                                                                                                                         %>
@@ -318,9 +321,9 @@
                                                                                                                             </div>
 
                                                                                                                             <% if
-                                                                                                                                (selectedDetailWeekTrainings==null
+                                                                                                                                (wochenTrainings==null
                                                                                                                                 ||
-                                                                                                                                selectedDetailWeekTrainings.isEmpty())
+                                                                                                                                wochenTrainings.isEmpty())
                                                                                                                                 {
                                                                                                                                 %>
                                                                                                                                 <div
@@ -354,7 +357,7 @@
                                                                                                                                             (PlanWeekTraining
                                                                                                                                             mapping
                                                                                                                                             :
-                                                                                                                                            selectedDetailWeekTrainings)
+                                                                                                                                            wochenTrainings)
                                                                                                                                             {
                                                                                                                                             String
                                                                                                                                             slotStatus=selectedDetailWeekStatuses==null
@@ -372,7 +375,7 @@
                                                                                                                                             actionLabel="Training starten"
                                                                                                                                             ;
                                                                                                                                             String
-                                                                                                                                            actionButtonClass="btn btn-secondary"
+                                                                                                                                            btnClass="btn btn-secondary"
                                                                                                                                             ;
                                                                                                                                             if
                                                                                                                                             ("ABGESCHLOSSEN".equals(slotStatus))
@@ -383,7 +386,7 @@
                                                                                                                                             ;
                                                                                                                                             actionLabel="Erneut starten"
                                                                                                                                             ;
-                                                                                                                                            actionButtonClass="btn btn-ghost"
+                                                                                                                                            btnClass="btn btn-ghost"
                                                                                                                                             ;
                                                                                                                                             }
                                                                                                                                             else
@@ -396,9 +399,15 @@
                                                                                                                                             ;
                                                                                                                                             actionLabel="Session fortsetzen"
                                                                                                                                             ;
-                                                                                                                                            actionButtonClass="btn btn-primary"
+                                                                                                                                            btnClass="btn btn-primary"
                                                                                                                                             ;
                                                                                                                                             }
+                                                                                                                                            String
+                                                                                                                                            planIdVal=String.valueOf(selectedPlan.getId());
+                                                                                                                                            String
+                                                                                                                                            weekIdVal=String.valueOf(selectedDetailWeek.getId());
+                                                                                                                                            String
+                                                                                                                                            trainingIdVal=String.valueOf(mapping.getTrainingId());
                                                                                                                                             %>
                                                                                                                                             <li
                                                                                                                                                 class="plan-details-item">
@@ -429,17 +438,17 @@
                                                                                                                                                         <input
                                                                                                                                                             type="hidden"
                                                                                                                                                             name="planId"
-                                                                                                                                                            value="<%= selectedPlan.getId() %>">
+                                                                                                                                                            value="<%= planIdVal %>">
                                                                                                                                                         <input
                                                                                                                                                             type="hidden"
                                                                                                                                                             name="planWeekId"
-                                                                                                                                                            value="<%= selectedDetailWeek.getId() %>">
+                                                                                                                                                            value="<%= weekIdVal %>">
                                                                                                                                                         <input
                                                                                                                                                             type="hidden"
                                                                                                                                                             name="trainingId"
-                                                                                                                                                            value="<%= mapping.getTrainingId() %>">
+                                                                                                                                                            value="<%= trainingIdVal %>">
                                                                                                                                                         <button
-                                                                                                                                                            class="<%= actionButtonClass %>"
+                                                                                                                                                            class="<%= btnClass %>"
                                                                                                                                                             type="submit">
                                                                                                                                                             <%= actionLabel
                                                                                                                                                                 %>
